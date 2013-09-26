@@ -149,6 +149,9 @@ chmod +x %{buildroot}%{_libdir}/elfutils/lib*.so*
  rm -f .%{_bindir}/eu-ld
 )
 
+mkdir -p %{buildroot}/usr/share/license
+cp COPYING %{buildroot}/usr/share/license/%{name}
+
 %check
 #make -s check
 
@@ -167,6 +170,7 @@ rm -rf %{buildroot}
 %manifest elfutils.manifest
 %defattr(-,root,root)
 %doc README  COPYING
+/usr/share/license/%{name}
 %{_bindir}/eu-addr2line
 %{_bindir}/eu-ar
 %{_bindir}/eu-elfcmp
