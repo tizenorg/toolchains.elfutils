@@ -134,7 +134,7 @@ RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wall/}
 RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wunused/}
 
 %reconfigure CFLAGS="%{optflags} -fexceptions" --disable-nls
-make
+make %{?_smp_mflags}
 
 %install
 make -s install DESTDIR=%{buildroot}
