@@ -15,7 +15,6 @@ Summary:        A collection of utilities and DSOs to handle compiled objects
 Url:            https://fedorahosted.org/elfutils/
 Group:          Development/Tools
 Source:         http://fedorahosted.org/releases/e/l/elfutils/%{name}-%{version}.tar.bz2
-Source1001: packaging/elfutils.manifest 
 Patch1:         elfutils-robustify.patch
 Patch2:         elfutils-portability.patch
 Requires:       elfutils-libelf-%{_arch} = %{version}
@@ -128,7 +127,6 @@ sed -i.scanf-m -e 's/%m/%a/g' src/addr2line.c tests/line2addr.c
 find . -name \*.sh ! -perm -0100 -print | xargs chmod +x
 
 %build
-cp %{SOURCE1001} .
 # Remove -Wall from default flags.  The makefiles enable enough warnings
 # themselves, and they use -Werror.  Appending -Wall defeats the cases where
 # the makefiles disable some specific warnings for specific code.
@@ -136,7 +134,7 @@ RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wall/}
 RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wunused/}
 
 %reconfigure CFLAGS="%{optflags} -fexceptions" --disable-nls
-make
+make %{?_smp_mflags}
 
 %install
 make -s install DESTDIR=%{buildroot}
@@ -152,6 +150,11 @@ chmod +x %{buildroot}%{_libdir}/elfutils/lib*.so*
 %check
 #make -s check
 
+mkdir -p %{buildroot}/usr/share/license
+cp -f COPYING %{buildroot}/usr/share/license/%{name}
+cp -f COPYING %{buildroot}/usr/share/license/%{name}-libs
+cp -f COPYING %{buildroot}/usr/share/license/%{name}-libelf
+
 %clean
 rm -rf %{buildroot}
 
@@ -164,7 +167,6 @@ rm -rf %{buildroot}
 %postun libelf -p /sbin/ldconfig
 
 %files
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %doc README  COPYING
 %{_bindir}/eu-addr2line
@@ -182,9 +184,9 @@ rm -rf %{buildroot}
 #%{_bindir}/eu-ld
 %{_bindir}/eu-unstrip
 %{_bindir}/eu-make-debug-archive
+/usr/share/license/%{name}
 
 %files libs
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_libdir}/libasm-%{version}.so
 %{_libdir}/libasm.so.*
@@ -192,9 +194,9 @@ rm -rf %{buildroot}
 %{_libdir}/libdw.so.*
 %dir %{_libdir}/elfutils
 %{_libdir}/elfutils/lib*.so
+/usr/share/license/%{name}-libs
 
 %files devel
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_includedir}/dwarf.h
 %dir %{_includedir}/elfutils
@@ -209,19 +211,17 @@ rm -rf %{buildroot}
 %{_libdir}/libdw.so
 
 %files devel-static
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_libdir}/libasm.a
 %{_libdir}/libdw.a
 
 %files libelf
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_libdir}/libelf-%{version}.so
 %{_libdir}/libelf.so.*
+/usr/share/license/%{name}-libelf
 
 %files libelf-devel
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_includedir}/libelf.h
 %{_includedir}/gelf.h
@@ -229,7 +229,6 @@ rm -rf %{buildroot}
 %{_libdir}/libelf.so
 
 %files libelf-devel-static
-%manifest elfutils.manifest
 %defattr(-,root,root)
 %{_libdir}/libelf.a
 
