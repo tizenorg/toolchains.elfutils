@@ -10,13 +10,17 @@
 Name:           elfutils
 Version:        0.152
 Release:        1
+VCS:            external/elfutils#submit/trunk/20121019.091749-3-g2ff0e357319319692c0f41bd6e70119bedc335bb
 License:        GPLv2 with exceptions
 Summary:        A collection of utilities and DSOs to handle compiled objects
 Url:            https://fedorahosted.org/elfutils/
 Group:          Development/Tools
 Source:         http://fedorahosted.org/releases/e/l/elfutils/%{name}-%{version}.tar.bz2
+Source1001:     elfutils.manifest
 Patch1:         elfutils-robustify.patch
 Patch2:         elfutils-portability.patch
+Patch3:		gcc47.patch
+Patch4:		gcc48.patch
 Requires:       elfutils-libelf-%{_arch} = %{version}
 Requires:       elfutils-libs-%{_arch} = %{version}
 
@@ -118,7 +122,10 @@ for libelf.
 %prep
 %setup -q
 
+cp %{SOURCE1001} .
 %patch1 -p1 -b .robustify
+%patch3 -p1
+%patch4 -p1
 
 %if !0%{?scanf_has_m}
 sed -i.scanf-m -e 's/%m/%a/g' src/addr2line.c tests/line2addr.c
@@ -133,8 +140,10 @@ find . -name \*.sh ! -perm -0100 -print | xargs chmod +x
 RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wall/}
 RPM_OPT_FLAGS=${RPM_OPT_FLAGS/-Wunused/}
 
-%reconfigure CFLAGS="%{optflags} -fexceptions" --disable-nls
-make %{?_smp_mflags}
+CFLAGS=${CFLAGS/-Wformat-security/}
+
+%reconfigure CFLAGS="$CFLAGS -fexceptions" --disable-nls
+make
 
 %install
 make -s install DESTDIR=%{buildroot}
@@ -146,9 +155,6 @@ chmod +x %{buildroot}%{_libdir}/elfutils/lib*.so*
 (cd %{buildroot}
  rm -f .%{_bindir}/eu-ld
 )
-
-%check
-#make -s check
 
 mkdir -p %{buildroot}/usr/share/license
 cp -f COPYING %{buildroot}/usr/share/license/%{name}
@@ -185,6 +191,7 @@ rm -rf %{buildroot}
 %{_bindir}/eu-unstrip
 %{_bindir}/eu-make-debug-archive
 /usr/share/license/%{name}
+%manifest %{name}.manifest
 
 %files libs
 %defattr(-,root,root)
